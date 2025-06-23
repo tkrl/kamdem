@@ -57,6 +57,12 @@ class User(BaseModel):
     student_id: Optional[str] = None
     department: Optional[str] = None
     year: Optional[int] = None
+    status: Optional[str] = "active"  # active, inactive, suspended
+    specialty: Optional[str] = None  # For teachers
+    level: Optional[str] = None  # For students: L1, L2, L3, M1, M2
+    field_of_study: Optional[str] = None  # For students: filière
+    phone: Optional[str] = None
+    address: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class UserCreate(BaseModel):
