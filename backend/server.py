@@ -436,9 +436,94 @@ async def get_attendance(current_user: Dict[str, Any] = Depends(require_role([Us
 
 # Admin Routes
 @api_router.get("/admin/users")
-async def get_all_users(current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
-    users = await db.users.find().to_list(1000)
+async def get_all_users(
+    search: Optional[str] = None,
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    department: Optional[str] = None,
+    level: Optional[str] = None,
+    field_of_study: Optional[str] = None,
+    specialty: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))
+):
+    # Build query
+    query = {}
+    if role:
+        query["role"] = role
+    if status:
+        query["status"] = status
+    if department:
+        query["department"] = {"$regex": department, "$options": "i"}
+    if level:
+        query["level"] = level
+    if field_of_study:
+        query["field_of_study"] = {"$regex": field_of_study, "$options": "i"}
+    if specialty:
+        query["specialty"] = {"$regex": specialty, "$options": "i"}
+    
+    # Search in name and email
+    if search:
+        search_query = {
+            "$or": [
+                {"first_name": {"$regex": search, "$options": "i"}},
+                {"last_name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}},
+                {"student_id": {"$regex": search, "$options": "i"}}
+            ]
+        }
+        if query:
+            query = {"$and": [query, search_query]}
+        else:
+            query = search_query
+    
+    users = await db.users.find(query).to_list(1000)
     return [UserResponse(**convert_objectid_to_str(user)) for user in users]
+
+@api_router.post("/admin/users")
+async def create_user(user_data: UserCreate, current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Hash password and create user
+    hashed_password = hash_password(user_data.password)
+    user_dict = user_data.dict()
+    user_dict["password"] = hashed_password
+    user_obj = User(**user_dict)
+    
+    await db.users.insert_one(user_obj.dict())
+    return UserResponse(**user_obj.dict())
+
+@api_router.put("/admin/users/{user_id}")
+async def update_user(
+    user_id: str, 
+    user_data: UserUpdate, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))
+):
+    # Get existing user
+    existing_user = await db.users.find_one({"id": user_id})
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update only provided fields
+    update_data = {k: v for k, v in user_data.dict().items() if v is not None}
+    
+    if update_data:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_data}
+        )
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": user_id})
+    return UserResponse(**convert_objectid_to_str(updated_user))
 
 @api_router.delete("/admin/users/{user_id}")
 async def delete_user(user_id: str, current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
