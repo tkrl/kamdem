@@ -407,7 +407,7 @@ async def get_attendance(current_user: Dict[str, Any] = Depends(require_role([Us
 @api_router.get("/admin/users")
 async def get_all_users(current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
     users = await db.users.find().to_list(1000)
-    return [UserResponse(**user) for user in users]
+    return [UserResponse(**convert_objectid_to_str(user)) for user in users]
 
 @api_router.delete("/admin/users/{user_id}")
 async def delete_user(user_id: str, current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
