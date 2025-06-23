@@ -294,7 +294,7 @@ async def create_course(course_data: CourseCreate, current_user: Dict[str, Any] 
 @api_router.get("/courses")
 async def get_courses(current_user: Dict[str, Any] = Depends(get_current_user)):
     courses = await db.courses.find().to_list(1000)
-    return courses
+    return [convert_objectid_to_str(course) for course in courses]
 
 @api_router.get("/courses/my")
 async def get_my_courses(current_user: Dict[str, Any] = Depends(get_current_user)):
