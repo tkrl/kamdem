@@ -74,6 +74,12 @@ class UserCreate(BaseModel):
     student_id: Optional[str] = None
     department: Optional[str] = None
     year: Optional[int] = None
+    status: Optional[str] = "active"
+    specialty: Optional[str] = None
+    level: Optional[str] = None
+    field_of_study: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
