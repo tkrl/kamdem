@@ -317,15 +317,90 @@ async def get_me(current_user: Dict[str, Any] = Depends(get_current_user)):
 
 # Course Routes
 @api_router.post("/courses")
-async def create_course(course_data: CourseCreate, current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN, UserRole.TEACHER]))):
+async def create_course(course_data: CourseCreate, current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))):
     course_obj = Course(**course_data.dict())
     await db.courses.insert_one(course_obj.dict())
     return course_obj
 
 @api_router.get("/courses")
-async def get_courses(current_user: Dict[str, Any] = Depends(get_current_user)):
-    courses = await db.courses.find().to_list(1000)
+async def get_courses(
+    search: Optional[str] = None,
+    department: Optional[str] = None,
+    teacher_id: Optional[str] = None,
+    year: Optional[int] = None,
+    semester: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    # Build query
+    query = {}
+    if department:
+        query["department"] = {"$regex": department, "$options": "i"}
+    if teacher_id:
+        query["teacher_id"] = teacher_id
+    if year:
+        query["year"] = year
+    if semester:
+        query["semester"] = {"$regex": semester, "$options": "i"}
+    
+    # Search in name, code, and description
+    if search:
+        search_query = {
+            "$or": [
+                {"name": {"$regex": search, "$options": "i"}},
+                {"code": {"$regex": search, "$options": "i"}},
+                {"description": {"$regex": search, "$options": "i"}}
+            ]
+        }
+        if query:
+            query = {"$and": [query, search_query]}
+        else:
+            query = search_query
+    
+    courses = await db.courses.find(query).to_list(1000)
     return [convert_objectid_to_str(course) for course in courses]
+
+@api_router.put("/courses/{course_id}")
+async def update_course(
+    course_id: str, 
+    course_data: CourseCreate, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN, UserRole.TEACHER]))
+):
+    # Check if course exists
+    existing_course = await db.courses.find_one({"id": course_id})
+    if not existing_course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    # Teachers can only update their own courses
+    if current_user["role"] == UserRole.TEACHER and existing_course["teacher_id"] != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only update your own courses"
+        )
+    
+    await db.courses.update_one(
+        {"id": course_id},
+        {"$set": course_data.dict()}
+    )
+    
+    # Return updated course
+    updated_course = await db.courses.find_one({"id": course_id})
+    return convert_objectid_to_str(updated_course)
+
+@api_router.delete("/courses/{course_id}")
+async def delete_course(
+    course_id: str, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))
+):
+    result = await db.courses.delete_one({"id": course_id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    return {"message": "Course deleted successfully"}
 
 @api_router.get("/courses/my")
 async def get_my_courses(current_user: Dict[str, Any] = Depends(get_current_user)):
