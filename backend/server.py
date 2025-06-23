@@ -363,10 +363,11 @@ async def get_exam_proposals(current_user: Dict[str, Any] = Depends(require_role
     
     # Enrich with course and teacher information
     for proposal in proposals:
+        proposal = convert_objectid_to_str(proposal)
         course = await db.courses.find_one({"id": proposal["course_id"]})
         teacher = await db.users.find_one({"id": proposal["teacher_id"]})
-        proposal["course"] = course
-        proposal["teacher"] = teacher
+        proposal["course"] = convert_objectid_to_str(course)
+        proposal["teacher"] = convert_objectid_to_str(teacher)
     return proposals
 
 @api_router.put("/exam-proposals/{proposal_id}/status")
