@@ -396,10 +396,11 @@ async def get_attendance(current_user: Dict[str, Any] = Depends(require_role([Us
     
     # Enrich with course and teacher information
     for record in attendance:
+        record = convert_objectid_to_str(record)
         course = await db.courses.find_one({"id": record["course_id"]})
         teacher = await db.users.find_one({"id": record["teacher_id"]})
-        record["course"] = course
-        record["teacher"] = teacher
+        record["course"] = convert_objectid_to_str(course)
+        record["teacher"] = convert_objectid_to_str(teacher)
     return attendance
 
 # Admin Routes
