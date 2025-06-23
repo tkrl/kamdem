@@ -421,14 +421,81 @@ async def create_schedule(schedule_data: ScheduleCreate, current_user: Dict[str,
     return schedule_obj
 
 @api_router.get("/schedules")
-async def get_schedules(current_user: Dict[str, Any] = Depends(get_current_user)):
-    schedules = await db.schedules.find().to_list(1000)
-    # Enrich with course information
+async def get_schedules(
+    search: Optional[str] = None,
+    day_of_week: Optional[str] = None,
+    classroom: Optional[str] = None,
+    course_id: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    # Build query
+    query = {}
+    if day_of_week:
+        query["day_of_week"] = {"$regex": day_of_week, "$options": "i"}
+    if classroom:
+        query["classroom"] = {"$regex": classroom, "$options": "i"}
+    if course_id:
+        query["course_id"] = course_id
+    
+    schedules = await db.schedules.find(query).to_list(1000)
+    
+    # Enrich with course information and apply search
+    enriched_schedules = []
     for schedule in schedules:
         schedule = convert_objectid_to_str(schedule)
         course = await db.courses.find_one({"id": schedule["course_id"]})
         schedule["course"] = convert_objectid_to_str(course)
-    return schedules
+        
+        # Apply search filter
+        if search:
+            course_name = course["name"].lower() if course else ""
+            classroom_name = schedule["classroom"].lower()
+            day_name = schedule["day_of_week"].lower()
+            
+            if (search.lower() in course_name or 
+                search.lower() in classroom_name or 
+                search.lower() in day_name):
+                enriched_schedules.append(schedule)
+        else:
+            enriched_schedules.append(schedule)
+    
+    return enriched_schedules
+
+@api_router.put("/schedules/{schedule_id}")
+async def update_schedule(
+    schedule_id: str, 
+    schedule_data: ScheduleCreate, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))
+):
+    # Check if schedule exists
+    existing_schedule = await db.schedules.find_one({"id": schedule_id})
+    if not existing_schedule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule not found"
+        )
+    
+    await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": schedule_data.dict()}
+    )
+    
+    # Return updated schedule
+    updated_schedule = await db.schedules.find_one({"id": schedule_id})
+    return convert_objectid_to_str(updated_schedule)
+
+@api_router.delete("/schedules/{schedule_id}")
+async def delete_schedule(
+    schedule_id: str, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN]))
+):
+    result = await db.schedules.delete_one({"id": schedule_id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule not found"
+        )
+    return {"message": "Schedule deleted successfully"}
 
 # Grade Routes
 @api_router.post("/grades")
