@@ -340,8 +340,9 @@ async def get_my_grades(current_user: Dict[str, Any] = Depends(get_current_user)
     
     # Enrich with course information
     for grade in grades:
+        grade = convert_objectid_to_str(grade)
         course = await db.courses.find_one({"id": grade["course_id"]})
-        grade["course"] = course
+        grade["course"] = convert_objectid_to_str(course)
     return grades
 
 # Exam Proposal Routes
