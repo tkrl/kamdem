@@ -68,6 +68,18 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
+    first_name: str
+    last_name: str
+    role: UserRole
+    student_id: Optional[str] = None
+    department: Optional[str] = None
+    year: Optional[int] = None
+    status: Optional[str] = "active"
+    specialty: Optional[str] = None
+    level: Optional[str] = None
+    field_of_study: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
 
 class UserUpdate(BaseModel):
     email: Optional[str] = None
@@ -76,18 +88,6 @@ class UserUpdate(BaseModel):
     department: Optional[str] = None
     year: Optional[int] = None
     status: Optional[str] = None
-    specialty: Optional[str] = None
-    level: Optional[str] = None
-    field_of_study: Optional[str] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    first_name: str
-    last_name: str
-    role: UserRole
-    student_id: Optional[str] = None
-    department: Optional[str] = None
-    year: Optional[int] = None
-    status: Optional[str] = "active"
     specialty: Optional[str] = None
     level: Optional[str] = None
     field_of_study: Optional[str] = None
