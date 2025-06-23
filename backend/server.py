@@ -220,6 +220,10 @@ def require_role(allowed_roles: List[UserRole]):
     return role_checker
 
 # Authentication Routes
+@api_router.get("/")
+async def root():
+    return {"message": "University Management System API", "status": "running"}
+
 @api_router.post("/auth/register")
 async def register(user_data: UserCreate):
     # Check if user already exists
