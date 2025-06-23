@@ -5,7 +5,11 @@ module.exports = {
     "./public/index.html"
   ],
   theme: {
-    extend: {},
+    extend: {
+      boxShadow: {
+        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
+      },
+    },
   },
   plugins: [],
 };
