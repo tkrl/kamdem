@@ -504,6 +504,114 @@ async def create_grade(grade_data: GradeCreate, current_user: Dict[str, Any] = D
     await db.grades.insert_one(grade_obj.dict())
     return grade_obj
 
+@api_router.get("/grades")
+async def get_all_grades(
+    search: Optional[str] = None,
+    course_id: Optional[str] = None,
+    student_id: Optional[str] = None,
+    exam_type: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.ADMIN, UserRole.TEACHER]))
+):
+    # Build query
+    query = {}
+    if course_id:
+        query["course_id"] = course_id
+    if student_id:
+        query["student_id"] = student_id
+    if exam_type:
+        query["exam_type"] = exam_type
+    
+    # Teachers can only see grades for their courses
+    if current_user["role"] == UserRole.TEACHER:
+        teacher_courses = await db.courses.find({"teacher_id": current_user["id"]}).to_list(1000)
+        teacher_course_ids = [course["id"] for course in teacher_courses]
+        if query.get("course_id"):
+            if query["course_id"] not in teacher_course_ids:
+                return []
+        else:
+            query["course_id"] = {"$in": teacher_course_ids}
+    
+    grades = await db.grades.find(query).to_list(1000)
+    
+    # Enrich with course and student information
+    enriched_grades = []
+    for grade in grades:
+        grade = convert_objectid_to_str(grade)
+        course = await db.courses.find_one({"id": grade["course_id"]})
+        student = await db.users.find_one({"id": grade["student_id"]})
+        grade["course"] = convert_objectid_to_str(course)
+        grade["student"] = convert_objectid_to_str(student) if student else None
+        
+        # Apply search filter
+        if search:
+            course_name = course["name"].lower() if course else ""
+            student_name = f"{student['first_name']} {student['last_name']}".lower() if student else ""
+            
+            if (search.lower() in course_name or 
+                search.lower() in student_name):
+                enriched_grades.append(grade)
+        else:
+            enriched_grades.append(grade)
+    
+    return enriched_grades
+
+@api_router.put("/grades/{grade_id}")
+async def update_grade(
+    grade_id: str, 
+    grade_data: GradeCreate, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.TEACHER, UserRole.ADMIN]))
+):
+    # Check if grade exists
+    existing_grade = await db.grades.find_one({"id": grade_id})
+    if not existing_grade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grade not found"
+        )
+    
+    # Teachers can only update grades for their courses
+    if current_user["role"] == UserRole.TEACHER:
+        course = await db.courses.find_one({"id": existing_grade["course_id"]})
+        if not course or course["teacher_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Can only update grades for your own courses"
+            )
+    
+    await db.grades.update_one(
+        {"id": grade_id},
+        {"$set": grade_data.dict()}
+    )
+    
+    # Return updated grade
+    updated_grade = await db.grades.find_one({"id": grade_id})
+    return convert_objectid_to_str(updated_grade)
+
+@api_router.delete("/grades/{grade_id}")
+async def delete_grade(
+    grade_id: str, 
+    current_user: Dict[str, Any] = Depends(require_role([UserRole.TEACHER, UserRole.ADMIN]))
+):
+    # Check if grade exists
+    existing_grade = await db.grades.find_one({"id": grade_id})
+    if not existing_grade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grade not found"
+        )
+    
+    # Teachers can only delete grades for their courses
+    if current_user["role"] == UserRole.TEACHER:
+        course = await db.courses.find_one({"id": existing_grade["course_id"]})
+        if not course or course["teacher_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Can only delete grades for your own courses"
+            )
+    
+    await db.grades.delete_one({"id": grade_id})
+    return {"message": "Grade deleted successfully"}
+
 @api_router.get("/grades/my")
 async def get_my_grades(current_user: Dict[str, Any] = Depends(get_current_user)):
     if current_user["role"] == UserRole.STUDENT:
