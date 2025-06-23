@@ -175,6 +175,18 @@ class AttendanceCreate(BaseModel):
     notes: Optional[str] = None
 
 # Utility functions
+def convert_objectid_to_str(doc):
+    """Convert MongoDB ObjectId to string for JSON serialization"""
+    if doc is None:
+        return None
+    if isinstance(doc, list):
+        return [convert_objectid_to_str(item) for item in doc]
+    if isinstance(doc, dict):
+        if '_id' in doc:
+            doc['_id'] = str(doc['_id'])
+        return doc
+    return doc
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
