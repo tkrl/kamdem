@@ -68,6 +68,19 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    department: Optional[str] = None
+    year: Optional[int] = None
+    status: Optional[str] = None
+    specialty: Optional[str] = None
+    level: Optional[str] = None
+    field_of_study: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
     first_name: str
     last_name: str
     role: UserRole
