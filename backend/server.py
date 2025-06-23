@@ -305,7 +305,7 @@ async def get_my_courses(current_user: Dict[str, Any] = Depends(get_current_user
         courses = await db.courses.find().to_list(1000)
     else:
         courses = await db.courses.find().to_list(1000)
-    return courses
+    return [convert_objectid_to_str(course) for course in courses]
 
 # Schedule Routes
 @api_router.post("/schedules")
