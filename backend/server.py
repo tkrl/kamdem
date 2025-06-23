@@ -319,8 +319,9 @@ async def get_schedules(current_user: Dict[str, Any] = Depends(get_current_user)
     schedules = await db.schedules.find().to_list(1000)
     # Enrich with course information
     for schedule in schedules:
+        schedule = convert_objectid_to_str(schedule)
         course = await db.courses.find_one({"id": schedule["course_id"]})
-        schedule["course"] = course
+        schedule["course"] = convert_objectid_to_str(course)
     return schedules
 
 # Grade Routes
