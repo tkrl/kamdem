@@ -1,38 +1,322 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom Styles for University Management System */
+
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #000000 100%);
+  min-height: 100vh;
+}
+
 .App {
-    text-align: center;
+  min-height: 100vh;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Custom gradient backgrounds */
+.bg-university-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #000000 100%);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.bg-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.App-link {
-    color: #61dafb;
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg border border-white/20 transition-colors duration-200;
+}
+
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+/* Custom input styles */
+.input-glass {
+  @apply bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 rounded-lg px-4 py-3 transition-all duration-200;
+}
+
+/* Card styles */
+.card-glass {
+  @apply bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl;
+}
+
+.card-hover {
+  @apply hover:bg-white/15 hover:border-white/30 transition-all duration-300 hover:shadow-2xl hover:transform hover:scale-105;
+}
+
+/* Status badge styles */
+.status-pending {
+  @apply bg-yellow-600/30 text-yellow-200 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-approved {
+  @apply bg-green-600/30 text-green-200 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-rejected {
+  @apply bg-red-600/30 text-red-200 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-present {
+  @apply bg-green-600/30 text-green-200 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-absent {
+  @apply bg-red-600/30 text-red-200 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+/* Navigation styles */
+.nav-item {
+  @apply w-full text-left px-4 py-3 rounded-lg mb-2 transition-all duration-200 flex items-center space-x-3 font-medium;
+}
+
+.nav-item-active {
+  @apply bg-blue-600/50 text-white shadow-lg;
+}
+
+.nav-item-inactive {
+  @apply text-gray-300 hover:bg-white/10 hover:text-white;
+}
+
+/* Header styles */
+.header-glass {
+  @apply bg-black/30 backdrop-blur-lg border-b border-white/10;
+}
+
+/* Sidebar styles */
+.sidebar-glass {
+  @apply bg-black/20 backdrop-blur-lg border-r border-white/10;
+}
+
+/* Dashboard grid */
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+}
+
+/* Stat card styles */
+.stat-card {
+  @apply bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300;
+}
+
+/* Content area styles */
+.content-area {
+  @apply space-y-6 fade-in;
+}
+
+/* Form styles */
+.form-container {
+  @apply space-y-6;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+/* Loading styles */
+.loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-white;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    @apply grid-cols-1;
+  }
+  
+  .form-grid {
+    @apply grid-cols-1;
+  }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Text gradient utilities */
+.text-gradient {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shadow utilities */
+.shadow-glass {
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Backdrop filter support */
+@supports (backdrop-filter: blur(10px)) {
+  .backdrop-blur-glass {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .backdrop-blur-glass {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400;
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply hover:transform hover:-translate-y-1 transition-transform duration-200;
+}
+
+.hover-glow {
+  @apply hover:shadow-glow transition-shadow duration-300;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .card-glass {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card-glass {
+    border-width: 2px;
+  }
+  
+  .btn-primary {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode utilities (already dark by default) */
+.dark-theme {
+  /* Already implemented as default */
+}
+
+/* University brand colors */
+.text-university-blue {
+  color: #1e3a8a;
+}
+
+.bg-university-blue {
+  background-color: #1e3a8a;
+}
+
+.border-university-blue {
+  border-color: #1e3a8a;
+}
+
+/* Custom spacing */
+.space-university {
+  @apply space-y-8;
+}
+
+/* Typography improvements */
+.title-main {
+  @apply text-3xl md:text-4xl font-bold text-white mb-6;
+}
+
+.title-section {
+  @apply text-2xl font-semibold text-white mb-4;
+}
+
+.title-card {
+  @apply text-lg font-semibold text-white;
+}
+
+.text-muted {
+  @apply text-gray-300;
+}
+
+.text-accent {
+  @apply text-blue-200;
 }
